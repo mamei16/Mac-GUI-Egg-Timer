@@ -1,22 +1,15 @@
-import sun.audio.AudioPlayer;
-import sun.audio.AudioStream;
-
-import javax.imageio.IIOException;
+import javax.sound.sampled.*;
 import javax.swing.*;    // make the Swing GUI classes available
-import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;       // used for Color and GridLayout classes
 import java.awt.event.*; // used for ActionEvent
-import java.awt.image.BufferStrategy;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
+import com.apple.eawt.Application;
 
 //TODO: Add only one buttonListener for all buttons, use e.getSource()
 
-public class Timer {
+public class TimerGUI {
     private static int seconds = 0;
     static JLabel hour,minute,second;
     static JFrame window = new JFrame("Timer");
@@ -31,12 +24,11 @@ public class Timer {
     static Thread timeThread;
     static int k = 0;
     static boolean timerRunning = false;
-    static boolean showButtons = true;
     static Color mycolor;
     static ArrayList<JButton> buttonList = new ArrayList<>();
-    static FileInputStream inFile;
-    static AudioStream sound;
-    static AudioPlayer player;
+    static ClassLoader classLoader;
+    static AudioInputStream audioIn;
+    static Clip audioPlayer;
 
     public static String htmlformat( String text, int fontSize){
         switch(fontSize){
@@ -115,11 +107,18 @@ public class Timer {
                 }catch (InterruptedException e ) { break;}
 
                 if (i == seconds){
-                    player.player.start(sound);
+                    Application application = Application.getApplication();
+                    try {
+                        audioPlayer.open(audioIn);
+                    } catch (LineUnavailableException | IOException e) {
+                        e.printStackTrace();
+                    }
+                    audioPlayer.start();
 
                     while (true){
                         stopbut.setBackground(Color.RED);
                         stopbut.repaint();
+                        application.requestUserAttention(true);
                         try {
                             TimeUnit.MILLISECONDS.sleep(500);
                         }catch (InterruptedException e) { break; }
@@ -139,17 +138,17 @@ public class Timer {
     }
 
     public static void main(String[] args){
-
+        classLoader = ClassLoader.getSystemClassLoader();
         try {
-            inFile = new FileInputStream("TimerSound.wav");
-            sound = new AudioStream(inFile);
-        }catch (FileNotFoundException e ) { System.err.println("File not found");}
-        catch (IOException d) {d.printStackTrace(); }
+            InputStream inputStream = classLoader.getResourceAsStream("TimerSound.wav");
+            audioIn = AudioSystem.getAudioInputStream(new BufferedInputStream(inputStream));
+            audioPlayer = AudioSystem.getClip();
+        } catch (IOException | UnsupportedAudioFileException | LineUnavailableException d) {d.printStackTrace(); }
 
         ActionListener startlisten = new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-               if (!timerRunning) timer(k);
+                if (!timerRunning) timer(k);
             }
         };
 
@@ -157,7 +156,8 @@ public class Timer {
             @Override
             public void actionPerformed(ActionEvent e)
             {
-                player.player.stop(sound);
+                audioPlayer.stop();
+                audioPlayer.close();
                 if (!(timeThread == null)){
                     if (timerRunning){
                         timeThread.interrupt();
@@ -272,6 +272,8 @@ public class Timer {
 
         mycolor = new Color(176,212,240);
 
+        com.apple.eawt.Application.getApplication().setDockIconImage(
+                new ImageIcon(classLoader.getResource( "timer_icon.png" )).getImage());
         window.add(content);
         window.setResizable(false);
         content.add(clock);
