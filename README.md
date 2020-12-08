@@ -96,6 +96,7 @@ You can choose between a jar file and a standalone application. Both can be down
 1. Download the latest dmg file 
 2. This is just your regular MacOs app installation progress, with no special considerations (as far as I'm aware). 
 NOTE: This file is much larger (about 200 MB) than the jar file, since it includes a Java runtime to execute the app. 
+NOTE2: If you have trouble starting the app after the installation, make sure to read [Issue #1][issue1].
 
 
 <!-- USAGE EXAMPLES -->
@@ -142,3 +143,4 @@ Distributed under the MIT License. See `LICENSE.txt` for more information.
 [license-url]: https://github.com/mamei16/Mac-GUI-Egg-Timer/blob/master/LICENSE.txt
 [screenshot1]: screenshots/screenshot1.png
 [screenshot2]: screenshots/screenshot2.png
+[issue1]: https://github.com/mamei16/Mac-GUI-Egg-Timer/issues/1
